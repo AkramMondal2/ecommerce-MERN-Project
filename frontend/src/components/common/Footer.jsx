@@ -8,11 +8,11 @@ import { Link } from "react-router-dom";
 const Footer = () => {
   return (
     <footer className="border-t py-12">
-      <div className="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 px-4 lg:px-6">
+      <div className="container mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 px-4 lg:px-6">
         <div>
           <h3 className="text-lg text-gray-800 mb-4">Newsletter</h3>
           <p className="text-gray-500 mb-4">
-            Be the firstv to hear about new product, execlusive events, and
+            Be the first to hear about new product, exclusive  events, and
             online offers.
           </p>
           <p className="font-medium text-gray-600 mb-6">
