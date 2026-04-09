@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import PayPalButton from "./PayPalButton";
+import PayPalButton from "../cart/PaypalButton";
 
 const cart = {
   products: [
