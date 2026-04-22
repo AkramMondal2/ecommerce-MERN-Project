@@ -1,6 +1,7 @@
 import Checkout from "../models/checkoutSchema.js";
 import Order from "../models/orderSchema.js";
 import Cart from "../models/cartSchema.js";
+import mongoose from "mongoose";
 
 export const newCheckout = async (req, res) => {
   try {
@@ -87,6 +88,13 @@ export const finalize = async (req, res) => {
   try {
     const { id } = req.params;
 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order ID",
+      });
+    }
+
     const checkout = await Checkout.findById(id);
 
     if (!checkout) {
@@ -112,7 +120,7 @@ export const finalize = async (req, res) => {
 
     const order = await Order.create({
       user: checkout.user,
-      orderItems: checkout.checkoutItems, 
+      orderItems: checkout.checkoutItems,
       shippingAddress: checkout.shippingAddress,
       paymentMethod: checkout.paymentMethod,
       totalPrice: checkout.totalPrice,
@@ -134,7 +142,6 @@ export const finalize = async (req, res) => {
       message: "Order created successfully",
       data: order,
     });
-
   } catch (error) {
     return res.status(500).json({
       success: false,
