@@ -7,6 +7,13 @@ export const newCheckout = async (req, res) => {
   try {
     const { checkoutItems, shippingAddress, paymentMethod } = req.body;
 
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "User not authenticated",
+      });
+    }
+
     if (!checkoutItems || checkoutItems.length === 0) {
       return res.status(400).json({
         success: false,
@@ -29,14 +36,14 @@ export const newCheckout = async (req, res) => {
       isPaid: false,
     });
 
-    console.log(`Checkout created for user: ${req.user._id}`);
-
     return res.status(201).json({
       success: true,
       message: "Checkout created successfully",
       data: checkout,
     });
   } catch (error) {
+    console.log(error);
+
     return res.status(500).json({
       success: false,
       message: error.message || "Server Error",

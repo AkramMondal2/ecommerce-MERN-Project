@@ -17,8 +17,26 @@ import UserManagement from "./components/admin/UserManagement";
 import ProductManagement from "./components/admin/ProductManagement";
 import EditProductPage from "./components/admin/EditProductPage";
 import OrderManagement from "./components/admin/OrderManagement";
+import { useEffect } from "react";
+import { getCurrentUser, setGuestId } from "./features/authSlice";
+import { useDispatch } from "react-redux";
+import { getGuestId } from "./utils/guest";
+import ProtectedRoute from "./components/common/ProtectedRoute";
 
 const App = () => {
+  const dispatch = useDispatch();
+  useEffect(() => {
+    const initAuth = async () => {
+      const res = await dispatch(getCurrentUser());
+
+      if (!res.payload) {
+        const id = getGuestId();
+        dispatch(setGuestId(id));
+      }
+    };
+
+    initAuth();
+  }, [dispatch]);
   return (
     <BrowserRouter>
       <Toaster position="top-right" />
@@ -38,7 +56,14 @@ const App = () => {
           <Route path="order/:id" element={<OrderDetailsPage />} />
           <Route path="my-orders" element={<MyOrdersPage />} />
         </Route>
-        <Route path="/admin" element={<AdminLayout />}>
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute role="admin">
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<AdminHomePage />} />
           <Route path="users" element={<UserManagement />} />
           <Route path="products" element={<ProductManagement />} />

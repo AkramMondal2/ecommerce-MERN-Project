@@ -16,10 +16,10 @@ const productRouter = express.Router();
 productRouter.post("/", protect, admin, createProduct);
 productRouter.put("/:id", protect, admin, updateProduct);
 productRouter.delete("/:id", protect, admin, deleteProduct);
-productRouter.get("/bestSellers", protect, admin, bestSellers);
-productRouter.get("/newArrivals", protect, admin, newArrivals);
-productRouter.get("/similar/:id", protect, admin, similarProducts);
-productRouter.get("/", protect, admin, getProduct);
-productRouter.get("/:id", protect, admin, productDetails);
+productRouter.get("/bestSellers", bestSellers);
+productRouter.get("/newArrivals", newArrivals);
+productRouter.get("/similar/:id", similarProducts);
+productRouter.get("/", getProduct);
+productRouter.get("/:id", productDetails);
 
 export default productRouter;

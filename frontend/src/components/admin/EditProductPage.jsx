@@ -1,6 +1,18 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate, useParams } from "react-router-dom";
+import { fetchProductDetails } from "../../features/productsSlice";
+import API from "../../utils/axios";
+import { updateProduct } from "../../features/adminProductSlice";
 
 const EditProductPage = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const { selectedProduct, loading, error } = useSelector(
+    (state) => state.products,
+  );
+
   const [productData, setProductData] = useState({
     name: "",
     description: "",
@@ -14,15 +26,22 @@ const EditProductPage = () => {
     collections: "",
     material: "",
     gender: "",
-    images: [
-      {
-        url: "https://picsum.photos/150?random=1",
-      },
-      {
-        url: "https://picsum.photos/150?random=2",
-      },
-    ],
+    images: [],
   });
+
+  const [upLoading, setUpLoading] = useState(false); //image uploading state
+
+  useEffect(() => {
+    if (id) {
+      dispatch(fetchProductDetails(id));
+    }
+  }, [dispatch, id]);
+
+  useEffect(() => {
+    if (selectedProduct) {
+      setProductData(selectedProduct);
+    }
+  }, [selectedProduct]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -31,13 +50,59 @@ const EditProductPage = () => {
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
-    console.log(file);
+
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      setUpLoading(true);
+
+      const { data } = await API.post("/api/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      const imageUrl = data?.data?.url;
+
+      if (!imageUrl) {
+        throw new Error("Image URL not returned from backend");
+      }
+
+      setProductData((prevData) => ({
+        ...prevData,
+        images: [
+          ...prevData.images,
+          {
+            url: imageUrl,
+            altText: file.name,
+          },
+        ],
+      }));
+    } catch (error) {
+      console.error("Image Upload Error:", error);
+    } finally {
+      setUpLoading(false);
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(productData);
+    dispatch(updateProduct({ id, productData }));
+    navigate("/admin/products");
   };
+
+  const handleRemoveImage = (indexToRemove) => {
+    setProductData((prevData) => ({
+      ...prevData,
+      images: prevData.images.filter((_, index) => index !== indexToRemove),
+    }));
+  };
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error}</p>;
 
   return (
     <div className="max-w-5xl mx-auto p-6 shadow-md rounded-md">
@@ -132,14 +197,26 @@ const EditProductPage = () => {
         <div className="mb-6">
           <label className="block font-semibold mb-2">Upload Image</label>
           <input type="file" onChange={handleImageUpload} />
-          <div className="flex gap-4 mt-4">
+          {upLoading && (
+            <p className="text-blue-500 mt-2">Uploading image... </p>
+          )}
+          {/* Preview Images */}
+          <div className="flex gap-4 mt-4 flex-wrap">
             {productData.images.map((image, index) => (
-              <div key={index}>
+              <div key={index} className="relative">
                 <img
                   src={image.url}
-                  alt={image.altText || "Product Image"}
-                  className="w-20 h-20 object-cover rounded-md shadow-md"
+                  alt={image.altText || "Product"}
+                  className="w-24 h-24 object-cover rounded-md shadow-md border"
                 />
+
+                <button
+                  type="button"
+                  onClick={() => handleRemoveImage(index)}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-sm"
+                >
+                  ×
+                </button>
               </div>
             ))}
           </div>

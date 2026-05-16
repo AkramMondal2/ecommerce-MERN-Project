@@ -35,7 +35,7 @@ export const updateStatus = async (req, res) => {
       });
     }
 
-    const order = await Order.findById(id);
+    const order = await Order.findById(id).populate("order", "name email");
 
     if (!order) {
       return res.status(404).json({

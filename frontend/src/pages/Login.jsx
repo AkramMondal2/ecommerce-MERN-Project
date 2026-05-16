@@ -1,18 +1,52 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import login from "../assets/login.webp";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { clearGuestId, loginUser } from "../features/authSlice";
+import { toast } from "sonner";
+import { mergeCart } from "../features/cartSlice";
 
 const Login = () => {
+  const dispatch = useDispatch();
+  const { loading } = useSelector((state) => state.auth);
   const [data, setData] = useState({ email: "", password: "" });
+  const navigate = useNavigate();
+  const { user, guestId } = useSelector((state) => state.auth);
+  const { cart } = useSelector((state) => state.cart);
+
+  // Get redirect parameter and check if its checkout or somthing
+  const redirect = new URLSearchParams(location.search).get("redirect") || "/";
+  const isCheckoutRedirect = redirect.includes("checkout");
+
+  useEffect(() => {
+    if (user) {
+      if (cart?.products.length > 0 && guestId) {
+        dispatch(mergeCart({ guestId, userId: user._id, })).then(() => {
+          navigate(isCheckoutRedirect ? "/checkout" : "/");
+        });
+      } else {
+        navigate(isCheckoutRedirect ? "/checkout" : "/");
+      }
+    }
+  }, [user, guestId, cart, navigate, isCheckoutRedirect, dispatch]);
 
   const handleChange = (e) => {
     setData({ ...data, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Login: ", data);
-    setData({ email: "", password: "" });
+
+    try {
+      await dispatch(loginUser(data)).unwrap();
+
+      toast.success("Login successful 🎉");
+      setData({ email: "", password: "" });
+      dispatch(clearGuestId());
+      localStorage.removeItem("guestId");
+    } catch (error) {
+      toast.error(error);
+    }
   };
 
   return (
@@ -53,13 +87,23 @@ const Login = () => {
           </div>
           <button
             type="submit"
-            className="w-full bg-black text-white p-2 rounded-lg font-semibold hover:bg-gray-800 transition"
+            disabled={loading}
+            className={`w-full p-2 rounded-lg font-semibold transition
+            ${
+              loading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-black text-white hover:bg-gray-800"
+            }
+          `}
           >
-            Sign In
+            {loading ? "Sign In... " : "Sign In"}
           </button>
           <p className="mt-6 text-center text-sm">
             Don't have an account?{" "}
-            <Link to="/register" className="text-blue-500">
+            <Link
+              to={`/register?redirect=${encodeURIComponent(redirect)}`}
+              className="text-blue-500"
+            >
               Register
             </Link>
           </p>
